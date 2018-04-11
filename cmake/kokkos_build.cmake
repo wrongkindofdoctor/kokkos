@@ -53,6 +53,12 @@ endif()
 
 INCLUDE_DIRECTORIES(${Kokkos_INCLUDE_DIRS})
 
+#if(STDEXECUTORS_FOUND)
+#  message("-- Adding ${STDEXECUTORS_INCLUDE_DIR} to include dirs")
+#  list(APPEND KOKKOS_TPL_INCLUDE_DIRS ${STDEXECUTORS_INCLUDE_DIR})
+#  SET(KOKKOS_HAVE_STDEXECUTORS On)
+#endif()
+
 IF(KOKKOS_SEPARATE_LIBS)
   # Sources come from makefile-generated kokkos_generated_settings.cmake file
   # Separate libs need to separate the sources

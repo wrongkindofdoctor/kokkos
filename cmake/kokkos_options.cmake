@@ -16,6 +16,7 @@ list(APPEND KOKKOS_INTERNAL_ENABLE_OPTIONS_LIST
      Qthread
      Cuda
      ROCm
+     StdExecutors
      HWLOC
      MEMKIND
      LIBRT
@@ -118,6 +119,7 @@ list(APPEND KOKKOS_DEVICES_LIST
     Qthreads      # qthreads
     Serial        # serial
     ROCm          # Relocatable device code
+    StdExecutors  # Based on standard library executors proposal P0443
     )
 
 # List of possible TPLs for Kokkos
@@ -127,11 +129,18 @@ list(APPEND KOKKOS_USE_TPLS_LIST
     HWLOC          # hwloc
     LIBRT          # librt
     MEMKIND        # experimental_memkind
+    STDEXECUTORS
     )
 # Map of cmake variables to Makefile variables
 set(KOKKOS_INTERNAL_HWLOC hwloc)
 set(KOKKOS_INTERNAL_LIBRT librt)
 set(KOKKOS_INTERNAL_MEMKIND experimental_memkind)
+
+find_package(StdExecutors)
+if(StdExecutors_FOUND)
+  set(KOKKOS_STDEXECUTORS_DIR "${STDEXECUTORS_INCLUDE_DIR}")
+  message(STATUS "KOKKOS_STDEXECUTORS_DIR = ${KOKKOS_STDEXECUTORS_DIR}")
+endif()
 
 # List of possible Advanced options
 set(KOKKOS_OPTIONS_LIST)
@@ -299,6 +308,10 @@ ELSE()
   set_kokkos_default_default(LIBRT ON)
 ENDIF()
 set(KOKKOS_ENABLE_LIBRT ${KOKKOS_INTERNAL_ENABLE_LIBRT_DEFAULT} CACHE BOOL "Enable librt for more precise timer.  (kokkos tpl)")
+
+# Enable std executors library.
+set_kokkos_default_default(STDEXECUTORS OFF)
+set(KOKKOS_ENABLE_STDEXECUTORS ${KOKKOS_INTERNAL_ENABLE_STDEXECUTORS_DEFAULT} CACHE BOOL "Enable stdexeuctors. (kokkos tpl)")
 
 
 #-------------------------------------------------------------------------------

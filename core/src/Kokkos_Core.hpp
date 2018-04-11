@@ -66,6 +66,10 @@
 #include <Kokkos_Qthreads.hpp>
 #endif
 
+#if defined( KOKKOS_ENABLE_STDEXECUTORS )
+#include <Kokkos_StdExecutors.hpp>
+#endif
+
 #if defined( KOKKOS_ENABLE_THREADS )
 #include <Kokkos_Threads.hpp>
 #endif

@@ -206,7 +206,7 @@ private:
   /** \brief finalize chunk_size if it was set to AUTO*/
   inline void set_auto_chunk_size() {
 
-   typename traits::index_type concurrency = traits::execution_space::concurrency();
+   typename traits::index_type concurrency = m_space.thread_pool_size();
    if( concurrency==0 ) concurrency=1;
 
    if(m_granularity > 0) {

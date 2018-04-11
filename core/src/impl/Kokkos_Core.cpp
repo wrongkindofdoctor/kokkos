@@ -113,10 +113,13 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
 #if defined( KOKKOS_ENABLE_OPENMP )
   if( std::is_same< Kokkos::OpenMP , Kokkos::DefaultExecutionSpace >::value ||
       std::is_same< Kokkos::OpenMP , Kokkos::HostSpace::execution_space >::value ) {
+#ifdef KOKKOS_ENABLE_DEPRECATED_CODE
     if(use_numa>0) {
       Kokkos::OpenMP::initialize(num_threads,use_numa);
     }
-    else {
+    else
+#endif
+    {
       Kokkos::OpenMP::initialize(num_threads);
     }
   }

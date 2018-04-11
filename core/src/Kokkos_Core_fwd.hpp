@@ -95,6 +95,11 @@ class HBWSpace; /// Memory space for hbw_malloc from memkind (e.g. for KNL proce
 class Serial;    ///< Execution space main process on CPU.
 #endif
 
+#if defined( KOKKOS_ENABLE_STDEXECUTORS )
+template <typename>
+class StdExecutors;    ///< Execution space using std executors from P0443
+#endif
+
 #if defined( KOKKOS_ENABLE_QTHREADS )
 class Qthreads;  ///< Execution space with Qthreads back-end.
 #endif
