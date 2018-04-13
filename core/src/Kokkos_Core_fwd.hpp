@@ -96,8 +96,10 @@ class Serial;    ///< Execution space main process on CPU.
 #endif
 
 #if defined( KOKKOS_ENABLE_STDEXECUTORS )
+namespace Experimental {
 template <typename>
 class StdExecutors;    ///< Execution space using std executors from P0443
+} // end namespace Experimental
 #endif
 
 #if defined( KOKKOS_ENABLE_QTHREADS )

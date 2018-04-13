@@ -68,7 +68,7 @@ namespace Experimental {
 namespace Impl {
 
 // Pimpl forward declaration
-template <typename ExecutionContext>
+template <typename Executor>
 struct StdExecutorsImpl;
 
 } // end namespace impl
@@ -77,6 +77,9 @@ struct StdExecutorsImpl;
 /// \brief Kokkos backend build on the standard library executors proposal, P0443r7
 template <typename Executor>
 class StdExecutors {
+private:
+  inline
+  StdExecutors(std::shared_ptr<Impl::StdExecutorsImpl<Executor>> const&) noexcept;
 public:
   //! Tag this class as a kokkos execution space
   using execution_space = StdExecutors<Executor>;
@@ -95,16 +98,18 @@ public:
   using scratch_memory_space = ScratchMemorySpace< OpenMP >;
 
   /// \brief Get a handle to the default execution space instance
-  inline
-  StdExecutors() noexcept;
+  inline StdExecutors() noexcept;
+
+  inline StdExecutors(StdExecutors const&) noexcept = default;
+  inline StdExecutors(StdExecutors&&) noexcept = default;
 
   /// \brief Initialize the default execution space
   ///
-  /// if ( thread_count == -1 )
-  ///   then use the number of threads that openmp defaults to
-  /// if ( thread_count == 0 && Kokkos::hwlow_available() )
+  /// if ( thread_count <= 0 && Kokkos::hwlow_available() )
   ///   then use hwloc to choose the number of threads and change
   ///   the default number of threads
+  /// if ( thread_count <= 0 && !Kokkos::hwloc_available() )
+  ///   then use 8
   /// if ( thread_count > 0 )
   ///   then force openmp to use the given number of threads and change
   ///   the default number of threads
@@ -129,8 +134,6 @@ public:
 
   /// \brief Does the given instance return immediately after launching
   /// a parallel algorithm
-  ///
-  /// This always returns false on OpenMP
   inline static bool is_asynchronous() noexcept;
   inline static bool is_asynchronous( StdExecutors const& ) noexcept;
 
@@ -164,16 +167,22 @@ public:
   static constexpr const char* name() noexcept { return ""; }
 
 private:
-  static std::unique_ptr<Impl::StdExecutorsImpl<Executor>> s_default_impl;
-  Impl::StdExecutorsImpl<Executor> m_impl;
+  // TODO remove a level of indirection here
+  static std::unique_ptr<StdExecutors<Executor>> s_default_instance;
+  std::shared_ptr<Impl::StdExecutorsImpl<Executor>> m_impl;
   template <typename>
   friend struct Impl::StdExecutorsImpl;
+  template <typename, typename, typename>
+  friend struct Kokkos::Impl::ParallelFor;
+  template <typename, typename, typename, typename>
+  friend struct Kokkos::Impl::ParallelReduce;
 };
 
 } // end namespace Experimental
 } // namespace Kokkos
 
 #include <StdExecutors/Kokkos_StdExecutors_Exec.hpp>
+#include <StdExecutors/Kokkos_StdExecutors_Parallel.hpp>
 
 #endif // KOKKOS_ENABLE_STDEXECUTORS
 

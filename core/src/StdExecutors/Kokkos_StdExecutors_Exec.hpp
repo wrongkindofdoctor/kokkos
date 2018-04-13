@@ -46,6 +46,7 @@
 
 #include <Kokkos_Core_fwd.hpp>
 #include <Kokkos_StdExecutors.hpp>
+#include <Kokkos_hwloc.hpp>
 
 #include <vector>
 #include <utility>
@@ -118,7 +119,7 @@ struct StdExecutorsImpl {
   { }
 
   bool is_asynchronous() const {
-    return not query(
+    return not std::experimental::execution::query(
       m_executor,
       std::experimental::execution::always_blocking
     );
@@ -158,17 +159,30 @@ namespace Kokkos {
 namespace Experimental {
 
 template <typename Executor>
+StdExecutors<Executor>::StdExecutors() noexcept
+  : m_impl(s_default_instance->m_impl)
+{ }
+
+template <typename Executor>
+StdExecutors<Executor>::StdExecutors(
+  std::shared_ptr<Impl::StdExecutorsImpl<Executor>> const& impl
+) noexcept
+  : m_impl(impl)
+{ }
+
+
+template <typename Executor>
 void
 StdExecutors<Executor>::fence(
   Kokkos::Experimental::StdExecutors<Executor> const& es
 ) {
-  es.m_impl.fence();
+  es.m_impl->fence();
 }
 
 template <typename Executor>
 void
 StdExecutors<Executor>::fence() {
-  s_default_impl.fence();
+  s_default_instance->m_impl->fence();
 }
 
 template <typename Executor>
@@ -176,13 +190,13 @@ bool
 StdExecutors<Executor>::is_asynchronous(
   Kokkos::Experimental::StdExecutors<Executor> const& es
 ) noexcept {
-  es.m_impl.is_asynchronous();
+  es.m_impl->is_asynchronous();
 }
 
 template <typename Executor>
 bool
 StdExecutors<Executor>::is_asynchronous() noexcept {
-  s_default_impl.is_asynchronous();
+  s_default_instance->m_impl->is_asynchronous();
 }
 
 template <typename Executor>
@@ -190,25 +204,25 @@ bool
 StdExecutors<Executor>::in_parallel(
   Kokkos::Experimental::StdExecutors<Executor> const& es
 ) noexcept {
-  return es.m_impl.in_parallel();
+  return es.m_impl->in_parallel();
 }
 
 template <typename Executor>
 bool
 StdExecutors<Executor>::in_parallel() noexcept {
-  return s_default_impl.in_parallel();
+  return s_default_instance->m_impl->in_parallel();
 }
 
 template <typename Executor>
 int
 StdExecutors<Executor>::thread_pool_size() noexcept {
-  return s_default_impl.thread_pool_size();
+  return s_default_instance->m_impl->thread_pool_size();
 }
 
 template <typename Executor>
 int
 StdExecutors<Executor>::thread_pool_rank() noexcept {
-  return s_default_impl.thread_pool_rank();
+  return s_default_instance->m_impl->thread_pool_rank();
 }
 
 template <typename Executor>
@@ -217,39 +231,65 @@ StdExecutors<Executor>::print_configuration(
   std::ostream& o,
   bool const verbose
 ) {
-  s_default_impl.print_configuration(o, verbose);
+  s_default_instance->m_impl->print_configuration(o, verbose);
 }
 
 template <typename Executor>
 bool
 StdExecutors<Executor>::is_initialized() noexcept {
-  return bool(StdExecutors<Executor>::s_default_impl);
+  return bool(StdExecutors<Executor>::s_default_instance);
 }
 
 template <typename Executor>
 void
 StdExecutors<Executor>::initialize(int thread_count) {
-  assert(not StdExecutors<Executor>::s_default_impl);
+  assert(not StdExecutors<Executor>::s_default_instance);
+
+  if(thread_count <= 0) {
+    if(Kokkos::hwloc::available()) {
+      thread_count = Kokkos::hwloc::get_available_numa_count()
+        * Kokkos::hwloc::get_available_cores_per_numa()
+        * Kokkos::hwloc::get_available_threads_per_core();
+    }
+    else {
+      thread_count = 8;
+    }
+  }
+
+  // Allocate space:
+  size_t pool_reduce_bytes = 32 * static_cast<size_t>(thread_count);
+  size_t team_reduce_bytes = 32 * static_cast<size_t>(thread_count);
+  size_t team_shared_bytes = 1024 * static_cast<size_t>(thread_count);
+  size_t thread_local_bytes = 1024;
+  // TODO allocate space for each thread's scratch
 
   using executor_actual_type = typename Impl::StdExecutorsImpl<Executor>::executor_actual_type;
-  if(not bool(Impl::StdExecutorsImpl<executor_actual_type>::s_default_context)) {
-    Impl::StdExecutorsImpl<executor_actual_type>::s_default_context = std::make_shared<
-      typename Impl::StdExecutorsImpl<executor_actual_type>::executor_context_type
-    >(
-      thread_count
-    );
+  if(not bool(Impl::StdExecutorsImpl<Executor>::s_default_context)) {
+    if(not bool(Impl::StdExecutorsImpl<executor_actual_type>::s_default_context)) {
+      Impl::StdExecutorsImpl<executor_actual_type>::s_default_context = std::make_shared<
+        typename Impl::StdExecutorsImpl<executor_actual_type>::executor_context_type
+      >(
+        thread_count
+      );
+    }
+    Impl::StdExecutorsImpl<Executor>::s_default_context = Impl::StdExecutorsImpl<executor_actual_type>::s_default_context;
   }
-  StdExecutors<Executor>::s_default_impl = std::make_unique<Impl::StdExecutorsImpl<Executor>>();
+  // Have to use `new` because it's a private constructor that make_shared can't access
+  StdExecutors<Executor>::s_default_instance.reset(
+    new StdExecutors<Executor>(
+      std::make_shared<Impl::StdExecutorsImpl<Executor>>()
+    )
+  );
 }
 
 template <typename Executor>
 void
 StdExecutors<Executor>::finalize() {
-  StdExecutors<Executor>::s_default_impl = nullptr;
+  StdExecutors<Executor>::s_default_instance = nullptr;
 }
 
 template <typename Executor>
-std::unique_ptr<Impl::StdExecutorsImpl<Executor>> StdExecutors<Executor>::s_default_impl = nullptr;
+std::unique_ptr<StdExecutors<Executor>> StdExecutors<Executor>::s_default_instance = nullptr;
 
 template <typename Executor>
 std::shared_ptr<typename Impl::StdExecutorsImpl<Executor>::executor_context_type>
