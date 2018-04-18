@@ -62,6 +62,8 @@
 #include <Kokkos_Layout.hpp>
 #include <impl/Kokkos_Tags.hpp>
 
+#include <StdExecutors/Kokkos_StdExecutors_MemorySpace.hpp>
+
 namespace Kokkos {
 namespace Experimental {
 
@@ -72,6 +74,9 @@ template <typename Executor>
 struct StdExecutorsImpl;
 
 } // end namespace impl
+
+template <typename Executor>
+struct StdExecutorsMemorySpace;
 
 /// \class StdExecutors
 /// \brief Kokkos backend build on the standard library executors proposal, P0443r7
@@ -84,24 +89,24 @@ public:
   //! Tag this class as a kokkos execution space
   using execution_space = StdExecutors<Executor>;
 
-  // Use HostSpace for now;
-  // TODO wrap the allocator property of the executor to generate something like a memory_space
-  using memory_space = HostSpace;
+  using memory_space = StdExecutorsMemorySpace<Executor>;
 
   //! This execution space preferred device_type
-  using device_type          = Kokkos::Device< execution_space, memory_space >;
+  using device_type = Kokkos::Device< execution_space, memory_space >;
 
   // TODO query this from the executor???
-  using array_layout         = LayoutRight;
+  using array_layout = LayoutRight;
 
-  using size_type            = memory_space::size_type;
+  using size_type            = typename memory_space::size_type;
   using scratch_memory_space = ScratchMemorySpace< OpenMP >;
 
   /// \brief Get a handle to the default execution space instance
   inline StdExecutors() noexcept;
 
-  inline StdExecutors(StdExecutors const&) noexcept = default;
-  inline StdExecutors(StdExecutors&&) noexcept = default;
+  inline StdExecutors(StdExecutors const&) = default;
+  inline StdExecutors(StdExecutors&&) = default;
+  inline StdExecutors& operator=(StdExecutors const&) = default;
+  inline StdExecutors& operator=(StdExecutors&&) = default;
 
   /// \brief Initialize the default execution space
   ///
@@ -164,7 +169,7 @@ public:
   KOKKOS_INLINE_FUNCTION
   static int thread_pool_rank() noexcept;
 
-  static constexpr const char* name() noexcept { return ""; }
+  static constexpr const char* name() noexcept { return "StdExecutors"; }
 
 private:
   // TODO remove a level of indirection here
@@ -183,6 +188,8 @@ private:
 
 #include <StdExecutors/Kokkos_StdExecutors_Exec.hpp>
 #include <StdExecutors/Kokkos_StdExecutors_Parallel.hpp>
+
+#include <StdExecutors/Kokkos_StdExecutors_MemorySpace_Impl.hpp>
 
 #endif // KOKKOS_ENABLE_STDEXECUTORS
 
