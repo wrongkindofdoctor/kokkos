@@ -78,12 +78,8 @@ struct pair
   /// This calls the default constructors of T1 and T2.  It won't
   /// compile if those default constructors are not defined and
   /// public.
-  KOKKOS_FORCEINLINE_FUNCTION constexpr
-#ifdef KOKKOS_CUDA_9_DEFAULTED_BUG_WORKAROUND
-  pair() : first(), second() {}
-#else
-  pair() = default;
-#endif
+  KOKKOS_FORCEINLINE_FUNCTION
+  constexpr pair() = default;
 
   /// \brief Constructor that takes both elements of the pair.
   ///

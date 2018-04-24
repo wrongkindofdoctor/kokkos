@@ -49,50 +49,48 @@ namespace TestAtomic {
 
 template< int N >
 struct SuperScalar {
-  double val[N];
+  double val[N] = {};
 
   KOKKOS_INLINE_FUNCTION
-  SuperScalar() {
-    for ( int i = 0; i < N; i++ ) {
-      val[i] = 0.0;
-    }
-  }
+  SuperScalar() noexcept = default;
+
+  KOKKOS_INLINE_FUNCTION constexpr
+  SuperScalar( const SuperScalar & src ) noexcept = default;
 
   KOKKOS_INLINE_FUNCTION
-  SuperScalar( const SuperScalar & src ) {
-    for ( int i = 0; i < N; i++ ) {
-      val[i] = src.val[i];
-    }
-  }
+  SuperScalar& operator=( const SuperScalar & src ) noexcept = default;
 
+  template <typename U>
   KOKKOS_INLINE_FUNCTION
-  SuperScalar( const volatile SuperScalar & src ) {
-    for ( int i = 0; i < N; i++ ) {
-      val[i] = src.val[i];
-    }
-  }
-
-  KOKKOS_INLINE_FUNCTION
-  SuperScalar& operator=( const SuperScalar & src ) {
+  SuperScalar( const U & src
+             , typename std::enable_if< std::is_same< SuperScalar<N>, typename std::remove_cv<U>::type>::value, int>::type = 0
+             ) noexcept
+  {
     for ( int i = 0; i < N; i++ ) {
       val[i] = src.val[i];
     }
-    return *this;
   }
 
+  template <typename U>
   KOKKOS_INLINE_FUNCTION
-  SuperScalar& operator=( const volatile SuperScalar & src ) {
+  typename std::enable_if< std::is_same< SuperScalar<N>, typename std::remove_cv<U>::type>::value, SuperScalar&>::type
+  operator=( const U & src ) noexcept
+  {
     for ( int i = 0; i < N; i++ ) {
       val[i] = src.val[i];
     }
     return *this;
   }
 
+  template <typename U>
   KOKKOS_INLINE_FUNCTION
-  void operator=( const SuperScalar & src ) volatile  {
+  typename std::enable_if< std::is_same< SuperScalar<N>, typename std::remove_cv<U>::type>::value, SuperScalar&>::type
+  operator=( const U & src ) volatile noexcept
+  {
     for ( int i = 0; i < N; i++ ) {
       val[i] = src.val[i];
     }
+    return *this;
   }
 
   KOKKOS_INLINE_FUNCTION
@@ -145,6 +143,9 @@ struct SuperScalar {
     }
   }
 };
+
+static_assert( std::is_trivially_copyable< SuperScalar<4> >::value
+             , "Error: SuperScalar not trivially copyable" );
 
 template< int N >
 std::ostream & operator<<( std::ostream & os, const SuperScalar< N > & dt )

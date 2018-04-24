@@ -67,6 +67,19 @@
 
 namespace Kokkos {
 
+#if defined( KOKKOS_COMPILER_GNU ) && !defined(__PGIC__) && !defined(__CUDA_ARCH__)
+
+  #define KOKKOS_NONTEMPORAL_PREFETCH_LOAD(addr) __builtin_prefetch(addr,0,0)
+  #define KOKKOS_NONTEMPORAL_PREFETCH_STORE(addr) __builtin_prefetch(addr,1,0)
+
+#else
+
+  #define KOKKOS_NONTEMPORAL_PREFETCH_LOAD(addr) ((void)0)
+  #define KOKKOS_NONTEMPORAL_PREFETCH_STORE(addr) ((void)0)
+
+#endif
+
+
 enum { UnorderedMapInvalidIndex = ~0u };
 
 /// \brief First element of the return value of UnorderedMap::insert().
@@ -843,6 +856,8 @@ inline void deep_copy(         UnorderedMap<DKey, DT, DDevice, Hasher, EqualTo> 
   dst.create_copy_view(src);
 }
 
+#undef KOKKOS_NONTEMPORAL_PREFETCH_LOAD
+#undef KOKKOS_NONTEMPORAL_PREFETCH_STORE
 
 } // namespace Kokkos
 

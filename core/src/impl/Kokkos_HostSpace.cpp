@@ -443,13 +443,16 @@ namespace {
 
 namespace Impl {
 void init_lock_array_host_space() {
+  #if 0
   static int is_initialized = 0;
   if(! is_initialized)
     for(int i = 0; i < static_cast<int> (HOST_SPACE_ATOMIC_MASK+1); i++)
       HOST_SPACE_ATOMIC_LOCKS[i] = 0;
+  #endif
 }
 
 bool lock_address_host_space(void* ptr) {
+  #if 0
 #if defined( KOKKOS_ENABLE_ISA_X86_64 ) && defined ( KOKKOS_ENABLE_TM )
   const unsigned status = _xbegin();
 
@@ -475,9 +478,11 @@ bool lock_address_host_space(void* ptr) {
 #if defined( KOKKOS_ENABLE_ISA_X86_64 ) && defined ( KOKKOS_ENABLE_TM )
   }
 #endif
+  #endif
 }
 
 void unlock_address_host_space(void* ptr) {
+  #if 0
 #if defined( KOKKOS_ENABLE_ISA_X86_64 ) && defined ( KOKKOS_ENABLE_TM )
   const unsigned status = _xbegin();
 
@@ -492,6 +497,7 @@ void unlock_address_host_space(void* ptr) {
 #if defined( KOKKOS_ENABLE_ISA_X86_64 ) && defined ( KOKKOS_ENABLE_TM )
   }
 #endif
+  #endif
 }
 
 }

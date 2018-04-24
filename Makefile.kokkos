@@ -336,7 +336,7 @@ ifeq ($(KOKKOS_INTERNAL_ENABLE_COMPILER_WARNINGS), 1)
   KOKKOS_CXXFLAGS += $(KOKKOS_INTERNAL_COMPILER_WARNINGS)
 endif
 
-KOKKOS_LIBS = -ldl
+KOKKOS_LIBS = -ldl -latomic
 KOKKOS_TPL_LIBRARY_NAMES += dl
 KOKKOS_LDFLAGS = -L$(shell pwd)
 # CXXLDFLAGS is used together with CXXFLAGS in a combined compile/link command

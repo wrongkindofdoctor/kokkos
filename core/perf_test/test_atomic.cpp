@@ -469,7 +469,7 @@ int main(int argc, char* argv[])
   Kokkos::initialize(argc,argv);
 
 
-  printf("Using %s\n",Kokkos::atomic_query_version());
+  //printf("Using %s\n",Kokkos::atomic_query_version());
   bool all_tests = false;
   if(type==-1) all_tests = true;
   while(type<100) {
