@@ -69,8 +69,8 @@ struct TrivialDeepCopyImpl<ExecutionSpace, false>;
 
 template <typename Executor, typename ExecutionSpace>
 struct DeepCopy<
-  Experimental::StdExecutorsMemorySpace<Executor>,
-  Experimental::StdExecutorsMemorySpace<Executor>,
+  Kokkos::Experimental::StdExecutorsMemorySpace<Executor>,
+  Kokkos::Experimental::StdExecutorsMemorySpace<Executor>,
   ExecutionSpace
 > : TrivialDeepCopyImpl<ExecutionSpace>
 {
@@ -80,7 +80,7 @@ struct DeepCopy<
 
 template <typename Executor, typename ExecutionSpace>
 struct DeepCopy<
-  Experimental::StdExecutorsMemorySpace<Executor>,
+  Kokkos::Experimental::StdExecutorsMemorySpace<Executor>,
   HostSpace,
   ExecutionSpace
 > : TrivialDeepCopyImpl<
@@ -95,7 +95,7 @@ struct DeepCopy<
 template <typename Executor, typename ExecutionSpace>
 struct DeepCopy<
   HostSpace,
-  Experimental::StdExecutorsMemorySpace<Executor>,
+  Kokkos::Experimental::StdExecutorsMemorySpace<Executor>,
   ExecutionSpace
 > : TrivialDeepCopyImpl<
       ExecutionSpace,
