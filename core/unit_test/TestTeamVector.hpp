@@ -343,7 +343,7 @@ struct functor_team_reduce_reducer {
     {
       val += i - team.league_rank() + team.league_size() + team.team_size();
     },
-      Kokkos::Experimental::Sum<Scalar>(value)
+      Kokkos::Sum<Scalar>(value)
     );
 
     team.team_barrier();
@@ -495,7 +495,7 @@ struct functor_team_vector_reduce_reducer {
     {
       val += i - team.league_rank() + team.league_size() + team.team_size();
     },
-      Kokkos::Experimental::Sum<Scalar>(value)
+      Kokkos::Sum<Scalar>(value)
     );
 
     team.team_barrier();
@@ -534,7 +534,7 @@ struct functor_vec_single {
     // inside a parallel_for and write to it.
     Scalar value = 0;
 
-    Kokkos::parallel_for( Kokkos::ThreadVectorRange( team, 13 ), [&] ( int i )
+    Kokkos::parallel_for( Kokkos::ThreadVectorRange( team, 0, 13 ), [&] ( int i )
     {
       value = i; // This write is violating Kokkos semantics for nested parallelism.
     });
@@ -545,7 +545,7 @@ struct functor_vec_single {
     }, value );
 
     Scalar value2 = 0;
-    Kokkos::parallel_reduce( Kokkos::ThreadVectorRange( team, 13 ), [&] ( int i, Scalar & val )
+    Kokkos::parallel_reduce( Kokkos::ThreadVectorRange( team, 0, 13 ), [&] ( int i, Scalar & val )
     {
       val += value;
     }, value2 );
@@ -664,7 +664,7 @@ struct functor_vec_red_reducer {
     Kokkos::parallel_reduce( Kokkos::ThreadVectorRange( team, 13 ), [&] ( int i, Scalar & val )
     {
       val *= ( i % 5 + 1 );
-    }, Kokkos::Experimental::Prod<Scalar>(value)
+    }, Kokkos::Prod<Scalar>(value)
     );
 
     Kokkos::single( Kokkos::PerThread( team ), [&] ()
@@ -741,7 +741,7 @@ bool test_scalar( int nteams, int team_size, int test ) {
   else if ( test == 1 ) {
     // WORKAROUND ROCM/CUDA
     #if defined(KOKKOS_ENABLE_CUDA)
-    #if defined(KOKKOS_CUDA_CLANG_WORKAROUND) || defined(KOKKOS_ARCH_PASCAL)
+    #if defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND) || defined(KOKKOS_ARCH_PASCAL)
     if(!std::is_same<ExecutionSpace,Kokkos::Cuda>::value)
     #endif
     #endif
@@ -809,11 +809,14 @@ template< class ExecutionSpace >
 bool Test( int test ) {
   bool passed = true;
 
-  passed = passed && test_scalar< int, ExecutionSpace >( 317, 33, test );
-  passed = passed && test_scalar< long long int, ExecutionSpace >( 317, 33, test );
-  passed = passed && test_scalar< float, ExecutionSpace >( 317, 33, test );
-  passed = passed && test_scalar< double, ExecutionSpace >( 317, 33, test );
-  passed = passed && test_scalar< my_complex, ExecutionSpace >( 317, 33, test );
+  int team_size = 33;
+  if( team_size > int(ExecutionSpace::concurrency()))
+    team_size = int(ExecutionSpace::concurrency());
+  passed = passed && test_scalar< int, ExecutionSpace >( 317, team_size, test );
+  passed = passed && test_scalar< long long int, ExecutionSpace >( 317, team_size, test );
+  passed = passed && test_scalar< float, ExecutionSpace >( 317, team_size, test );
+  passed = passed && test_scalar< double, ExecutionSpace >( 317, team_size, test );
+  passed = passed && test_scalar< my_complex, ExecutionSpace >( 317, team_size, test );
 
   return passed;
 }
@@ -841,8 +844,11 @@ public:
   }
 
   void run_test( const size_type & nrows, const size_type & ncols
-               , const size_type & team_size, const size_type & vector_length )
+               , size_type team_size, const size_type & vector_length )
   {
+    if( team_size > size_type(DeviceType::execution_space::concurrency()))
+      team_size = size_type(DeviceType::execution_space::concurrency());
+
     //typedef Kokkos::LayoutLeft Layout;
     typedef Kokkos::LayoutRight Layout;
 
@@ -926,7 +932,7 @@ public:
 
 #endif
         
-#if !defined(KOKKOS_CUDA_CLANG_WORKAROUND)
+#if !defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 TEST_F( TEST_CATEGORY, team_vector )
 {
   ASSERT_TRUE( ( TestTeamVector::Test< TEST_EXECSPACE >( 0 ) ) );
@@ -943,7 +949,7 @@ TEST_F( TEST_CATEGORY, team_vector )
 }
 #endif
 
-#if !defined(KOKKOS_CUDA_CLANG_WORKAROUND)
+#if !defined(KOKKOS_IMPL_CUDA_CLANG_WORKAROUND)
 TEST_F( TEST_CATEGORY, triple_nested_parallelism )
 {
 // With KOKKOS_DEBUG enabled, the functor uses too many registers to run
@@ -953,7 +959,7 @@ TEST_F( TEST_CATEGORY, triple_nested_parallelism )
   if (!std::is_same<TEST_EXECSPACE, Kokkos::Cuda>::value) {
 #endif
 #ifdef KOKKOS_ENABLE_ROCM // ROCm doesn't support TeamSize 32x32
-  if (!std::is_same<TEST_EXECSPACE, Kokkos::ROCm>::value) {
+  if (!std::is_same<TEST_EXECSPACE, Kokkos::Experimental::ROCm>::value) {
 #endif
   TestTripleNestedReduce< double, TEST_EXECSPACE >( 8192, 2048, 32, 32 );
 #ifdef KOKKOS_ENABLE_ROCM
@@ -965,7 +971,7 @@ TEST_F( TEST_CATEGORY, triple_nested_parallelism )
 #endif
   TestTripleNestedReduce< double, TEST_EXECSPACE >( 8192, 2048, 16, 16 );
 #ifdef KOKKOS_ENABLE_ROCM // ROCm doesn't support team sizes not powers of two
-  if (!std::is_same<TEST_EXECSPACE, Kokkos::ROCm>::value) {
+  if (!std::is_same<TEST_EXECSPACE, Kokkos::Experimental::ROCm>::value) {
 #endif
   TestTripleNestedReduce< double, TEST_EXECSPACE >( 8192, 2048, 7, 16 );
 #ifdef KOKKOS_ENABLE_ROCM
