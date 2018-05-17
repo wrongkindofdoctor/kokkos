@@ -85,7 +85,7 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
   }
 
   // Protect declarations, to prevent "unused variable" warnings.
-#if defined( KOKKOS_ENABLE_OPENMP ) || defined( KOKKOS_ENABLE_THREADS ) || defined( KOKKOS_ENABLE_OPENMPTARGET )
+#if defined( KOKKOS_ENABLE_OPENMP ) || defined( KOKKOS_ENABLE_THREADS ) || defined( KOKKOS_ENABLE_OPENMPTARGET ) || defined( KOKKOS_ENABLE_STDEXECUTORS )
   const int num_threads = args.num_threads;
 #endif
 #if defined( KOKKOS_ENABLE_THREADS ) || defined( KOKKOS_ENABLE_OPENMPTARGET )
@@ -224,6 +224,14 @@ setenv("MEMKIND_HBW_NODES", "1", 0);
   }
 #endif
 
+#if defined(KOKKOS_ENABLE_STDEXECUTORS)
+  if(num_threads>0) {
+     Kokkos::Experimental::StdExecutors<>::initialize(num_threads);
+  } else {
+     Kokkos::Experimental::StdExecutors<>::initialize();
+  }
+#endif
+
 #if defined(KOKKOS_ENABLE_PROFILING)
     Kokkos::Profiling::initialize();
 #endif
@@ -281,6 +289,10 @@ void finalize_internal( const bool all_spaces = false )
     if(Kokkos::Experimental::OpenMPTarget::is_initialized())
       Kokkos::Experimental::OpenMPTarget::finalize();
   }
+#endif
+
+#if defined( KOKKOS_ENABLE_EXECUTORS )
+  Kokkos::Experimental::StdExecutors<>::finalize();
 #endif
 
 #if defined( KOKKOS_ENABLE_OPENMP )
@@ -352,6 +364,10 @@ void fence_internal()
       std::is_same< Kokkos::Threads , Kokkos::HostSpace::execution_space >::value ) {
     Kokkos::Threads::fence();
   }
+#endif
+
+#if defined( KOKKOS_ENABLE_STDEXECUTORS ) 
+  Kokkos::Experimental::StdExecutors<>::fence();
 #endif
 
 #if defined( KOKKOS_ENABLE_SERIAL )

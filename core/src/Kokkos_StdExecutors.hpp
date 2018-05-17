@@ -98,7 +98,7 @@ public:
   using array_layout = LayoutRight;
 
   using size_type            = typename memory_space::size_type;
-  using scratch_memory_space = ScratchMemorySpace< OpenMP >;
+  using scratch_memory_space = ScratchMemorySpace< Serial >;
 
   /// \brief Get a handle to the default execution space instance
   inline StdExecutors() noexcept;

@@ -54,6 +54,9 @@
 #include <Kokkos_UniqueToken.hpp>
 #include <Kokkos_MasterLock.hpp>
 
+#ifdef KOKKOS_ENABLE_STDEXECUTORS
+#include <experimental/thread_pool>
+#endif
 //----------------------------------------------------------------------------
 // Have assumed a 64bit build (8byte pointers) throughout the code base.
 
@@ -97,8 +100,11 @@ class Serial;    ///< Execution space main process on CPU.
 #endif
 
 #if defined( KOKKOS_ENABLE_STDEXECUTORS )
+using DefaultStdExecutorExecutor = decltype(
+  std::experimental::static_thread_pool(8).executor()
+);
 namespace Experimental {
-template <typename>
+template <typename T = DefaultStdExecutorExecutor >
 class StdExecutors;    ///< Execution space using std executors from P0443
 } // end namespace Experimental
 #endif
@@ -159,6 +165,8 @@ namespace Kokkos {
   typedef Experimental::ROCm DefaultExecutionSpace ;
 #elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP )
   typedef OpenMP DefaultExecutionSpace;
+#elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_STDEXECUTORS )
+  typedef Experimental::StdExecutors<> DefaultExecutionSpace;
 #elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_THREADS )
   typedef Threads DefaultExecutionSpace;
 //#elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_QTHREADS )
