@@ -130,6 +130,13 @@ class ROCm ;                 ///< Execution space for ROCm GPU
 }
 #endif
 
+#if defined( KOKKOS_ENABLE_HIP )
+namespace Experimental {
+class HIPSpace ;            ///< Memory space on HIP GPU
+class HIP ;                 ///< Execution space for HIP GPU
+}
+#endif
+
 template<class ExecutionSpace, class MemorySpace>
 struct Device;
 
@@ -148,6 +155,8 @@ namespace Kokkos {
   typedef Cuda DefaultExecutionSpace;
 #elif defined ( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMPTARGET )
   typedef Experimental::OpenMPTarget DefaultExecutionSpace ;
+#elif defined ( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_HIP )
+  typedef Experimental::HIP DefaultExecutionSpace ;
 #elif defined ( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_ROCM )
   typedef Experimental::ROCm DefaultExecutionSpace ;
 #elif defined( KOKKOS_ENABLE_DEFAULT_DEVICE_TYPE_OPENMP )

@@ -77,6 +77,9 @@
 #if defined( KOKKOS_ENABLE_ROCM )
 #include <Kokkos_ROCm.hpp>
 #endif
+#if defined( KOKKOS_ENABLE_HIP )
+#include <Kokkos_HIP.hpp>
+#endif
 
 #include <Kokkos_AnonymousSpace.hpp>
 #include <Kokkos_Pair.hpp>
