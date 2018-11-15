@@ -151,7 +151,7 @@ template< class Tag, class ReturnType, class F, class TransformIndex>
 void scan_enqueue(
   const int len,
   const F & f,
-  ReturnType & return_val,
+  ReturnType return_val,
   TransformIndex transform_index)
 {
     typedef Kokkos::Impl::FunctorValueTraits< F, Tag>  ValueTraits;
@@ -248,7 +248,8 @@ void scan_enqueue(
         }
     }).wait();
     copy(total,total_cpu.data());
-    return_val = total_cpu[0];
+    if (return_val)
+       *return_val = total_cpu[0];
 }
 
 } // namespace Impl

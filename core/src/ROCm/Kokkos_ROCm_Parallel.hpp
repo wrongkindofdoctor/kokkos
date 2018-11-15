@@ -1322,10 +1322,30 @@ private:
   typedef Kokkos::RangePolicy< Traits... > Policy;
   typedef typename Policy::work_tag Tag;
   typedef Kokkos::Impl::FunctorValueTraits< FunctorType, Tag>  ValueTraits;
+  typedef FunctorAnalysis< FunctorPatternInterface::SCAN , Policy , FunctorType > Analysis ;
+
+  typedef typename Analysis::pointer_type    pointer_type ;
 
 public:
 
   //----------------------------------------
+
+    // use template specializations to cast the reference return value to a pointer
+    // if the return type is a view, then the pointer points to the data
+    // if the return type is a scalar, then the pointer points to the reference parameter
+    template < class TagType>
+    inline 
+    typename std::enable_if< Kokkos::is_view< TagType >::value, typename pointer_type >::type
+    initialize_ptr(ReturnType & arg_value) {
+        return (pointer_type)arg_value.data();
+    }
+
+    template < class TagType>
+    inline 
+    typename std::enable_if< !Kokkos::is_view< TagType >::value, typename pointer_type >::type
+    initialize_ptr(ReturnType & arg_value) {
+        return (pointer_type)&arg_value;
+    }
 
   inline
   ParallelScanWithTotal( const FunctorType & f
@@ -1336,6 +1356,8 @@ public:
 
 
     if(len==0) return;
+
+    pointer_type retVal = ParallelScanWithTotal::template initialize_ptr<ReturnType> (arg_returnvalue);
 
     scan_enqueue<Tag,ReturnType>(len, f, arg_returnvalue, [](hc::tiled_index<1> idx, int, int) { return idx.global[0]; });
   }
