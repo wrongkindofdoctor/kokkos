@@ -2205,6 +2205,7 @@ private:
   size_type *       m_scratch_flags ;
   size_type         m_final ;
   ReturnType      & m_returnvalue;
+  pointer_type      m_return_ptr;
 
   template< class TagType >
   __device__ inline
@@ -2379,9 +2380,29 @@ public:
         m_final = true ;
         CudaParallelLaunch< ParallelScanWithTotal, LaunchBounds >( *this, grid, block, shmem ); // copy to device and execute
 
-        const int size = ValueTraits::value_size( m_functor );
-        DeepCopy<HostSpace,CudaSpace>( &m_returnvalue, m_scratch_space + (grid_x - 1)*size/sizeof(int), size );
+        if (m_return_ptr) {
+           const int size = ValueTraits::value_size( m_functor );   
+           DeepCopy<HostSpace,CudaSpace>( m_return_ptr, m_scratch_space + (grid_x - 1)*size/sizeof(int), size );
+        }
       }
+    }
+
+
+    // use template specializations to cast the reference return value to a pointer
+    // if the return type is a view, then the pointer points to the data
+    // if the return type is a scalar, then the pointer points to the reference parameter
+    template < class TagType>
+    inline 
+    typename std::enable_if< Kokkos::is_view< TagType >::value, void >::type
+    initialize_ptr(ReturnType & arg_value) {
+        m_return_ptr = (pointer_type)arg_value.data();
+    }
+
+    template < class TagType>
+    inline 
+    typename std::enable_if< !Kokkos::is_view< TagType >::value, void >::type
+    initialize_ptr(ReturnType & arg_value) {
+        m_return_ptr = (pointer_type)&arg_value;
     }
 
   ParallelScanWithTotal( const FunctorType  & arg_functor ,
@@ -2393,7 +2414,10 @@ public:
   , m_scratch_flags( 0 )
   , m_final( false )
   , m_returnvalue( arg_returnvalue )
-  { }
+  , m_return_ptr( NULL )
+  { 
+     ParallelScanWithTotal::template initialize_ptr <ReturnType> ( arg_returnvalue );
+  }
 };
 
 } // namespace Impl

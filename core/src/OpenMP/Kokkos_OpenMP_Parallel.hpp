@@ -797,6 +797,7 @@ private:
   const FunctorType    m_functor;
   const Policy         m_policy;
         ReturnType   & m_returnvalue;
+        pointer_type   m_return_ptr;
 
   template< class TagType >
   inline static
@@ -890,14 +891,31 @@ public:
           ( m_functor , range.begin() , range.end() , update_base , true );
 
         if (omp_get_thread_num()==omp_get_num_threads()-1) {
-          m_returnvalue = update_base;
+          if (m_return_ptr)
+             *m_return_ptr = update_base;
         }
       }
 
     }
 
-  //----------------------------------------
+    // use template specializations to cast the reference return value to a pointer
+    // if the return type is a view, then the pointer points to the data
+    // if the return type is a scalar, then the pointer points to the reference parameter
+    template < class TagType>
+    inline 
+    typename std::enable_if< Kokkos::is_view< TagType >::value, void >::type
+    initialize_ptr(ReturnType & arg_value) {
+        m_return_ptr = (pointer_type)arg_value.data();
+    }
 
+    template < class TagType>
+    inline 
+    typename std::enable_if< !Kokkos::is_view< TagType >::value, void >::type
+    initialize_ptr(ReturnType & arg_value) {
+        m_return_ptr = (pointer_type)&arg_value;
+    }
+
+  //----------------------------------------
   inline
   ParallelScanWithTotal( const FunctorType & arg_functor
                        , const Policy      & arg_policy
@@ -906,7 +924,11 @@ public:
     , m_functor( arg_functor )
     , m_policy(  arg_policy )
     , m_returnvalue(  arg_returnvalue )
-  {}
+    , m_return_ptr(NULL)
+  {
+     ParallelScanWithTotal::template initialize_ptr <ReturnType> ( arg_returnvalue );
+  }
+  
 
   //----------------------------------------
 };

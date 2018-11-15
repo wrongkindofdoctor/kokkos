@@ -98,6 +98,18 @@ struct TestScan {
     Kokkos::parallel_scan( N, *this, total );
     run_check( size_t( ( N+1 )*N/2 ), size_t( total ) );
     check_error();
+  } 
+
+  TestScan( const WorkSpec & N, bool use_view )
+  {
+    if (use_view == false)
+        return;
+
+    Kokkos::View< long long int, Kokkos::HostSpace > ret_total( "Total" );
+    ret_total() = 0;
+     
+    Kokkos::parallel_scan( N, *this, ret_total );
+    run_check( size_t( ( N+1 )*N/2 ), size_t( ret_total() ) );
   }
 
   TestScan( const WorkSpec & Start , const WorkSpec & N )
@@ -138,6 +150,12 @@ TEST_F( TEST_CATEGORY, scan )
   TestScan< TEST_EXECSPACE >( 0 );
   TestScan< TEST_EXECSPACE >( 100000 );
   TestScan< TEST_EXECSPACE >( 10000000 );
+  TestScan< TEST_EXECSPACE >( 0,true );
+  TestScan< TEST_EXECSPACE >( 3,true );
+  TestScan< TEST_EXECSPACE >( 10,true );
+  TestScan< TEST_EXECSPACE >( 100,true );
+  TestScan< TEST_EXECSPACE >( 1000,true );
+  TestScan< TEST_EXECSPACE >( 100000,true );
   TEST_EXECSPACE::fence();
 }
 
