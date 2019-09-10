@@ -159,6 +159,7 @@ SharedAllocationRecord(
                         SharedAllocationHeader            * arg_alloc_ptr
                       , size_t                              arg_alloc_size
                       , SharedAllocationRecord< void , void >::function_type  arg_dealloc
+					  , bool                                bDebug
                       )
   : m_alloc_ptr(  arg_alloc_ptr )
   , m_alloc_size( arg_alloc_size )
@@ -169,6 +170,7 @@ SharedAllocationRecord(
   , m_next( 0 )
 #endif
   , m_count( 0 )
+  , m_Debug( bDebug )
 {
   if ( 0 != arg_alloc_ptr ) {
 

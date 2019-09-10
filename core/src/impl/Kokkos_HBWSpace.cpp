@@ -208,6 +208,7 @@ SharedAllocationRecord( const Kokkos::Experimental::HBWSpace & arg_space
                       , const std::string       & arg_label
                       , const size_t              arg_alloc_size
                       , const SharedAllocationRecord< void , void >::function_type arg_dealloc
+                      , bool bDebug
                       )
   // Pass through allocated [ SharedAllocationHeader , user_memory ]
   // Pass through deallocation function
@@ -216,9 +217,10 @@ SharedAllocationRecord( const Kokkos::Experimental::HBWSpace & arg_space
 #ifdef KOKKOS_DEBUG
         & SharedAllocationRecord< Kokkos::Experimental::HBWSpace , void >::s_root_record,
 #endif
-        reinterpret_cast<SharedAllocationHeader*>( arg_space.allocate( sizeof(SharedAllocationHeader) + arg_alloc_size ) )
-      , sizeof(SharedAllocationHeader) + arg_alloc_size
+        reinterpret_cast<SharedAllocationHeader*>( arg_space.allocate( request_alloc_size( arg_alloc_size, bDebug ) ) )
+      , request_alloc_size( arg_alloc_size, bDebug )
       , arg_dealloc
+      , bDebug
       )
   , m_space( arg_space )
 {

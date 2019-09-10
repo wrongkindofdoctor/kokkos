@@ -196,6 +196,7 @@ protected:
                         , const std::string                    & arg_label
                         , const size_t                           arg_alloc_size
                         , const RecordBase::function_type        arg_dealloc = & deallocate
+                        , const bool                             bDebug = false
                         );
 
 public:
