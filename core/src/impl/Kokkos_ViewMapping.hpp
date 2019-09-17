@@ -2539,8 +2539,8 @@ struct ViewValueFunctor< ExecSpace , ValueType , false /* is_scalar */ >
       size_t debug_start = i * sizeof(ValueType);
       size_t debug_end   = debug_start + sizeof(ValueType);
       for (size_t r = debug_start; r < debug_end; r++) {
-        begin[r] = 0xFE;
-        end[r]   = 0xFE;
+        begin[r] = (char)0xFE;
+        end[r]   = (char)0xFE;
       }
     }
   }
