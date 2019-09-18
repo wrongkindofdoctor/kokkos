@@ -41,6 +41,6 @@
 //@HEADER
 */
 
-#include <cuda/TestCuda_Category.hpp>
-#define TESTING_DEVICE_MEMORY_SPACE Kokkos::CudaSpace
+#include <cuda/TestCudaUVM_Category.hpp>
+#define TESTING_DEVICE_MEMORY_SPACE Kokkos::CudaUVMSpace
 #include <TestMemoryDebugger.hpp>

@@ -79,6 +79,8 @@ ifeq ($(KOKKOS_INTERNAL_USE_CUDA), 1)
 
 ifeq ($(KOKKOS_INTERNAL_ENABLE_MEMORY_DEBUGGER), 1)
     OBJ_CUDA += TestCuda_MemoryDebugger.o
+    OBJ_CUDA += TestCudaUVM_MemoryDebugger.o
+    OBJ_CUDA += TestCudaHostPinned_MemoryDebugger.o
 endif
 
     TARGETS += KokkosCore_UnitTest_Cuda

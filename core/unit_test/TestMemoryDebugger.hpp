@@ -71,7 +71,7 @@ struct TestMemoryDebugger {
     size_t local_N = N;
 
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<ExecSpace>(0, N), KOKKOS_LAMBDA(const size_t i) {
+        Kokkos::RangePolicy<typename ExecSpace::execution_space>(0, N), KOKKOS_LAMBDA (const size_t i) {
           A(i) = i * 2;
           B(i) = i * 3;
 
@@ -144,7 +144,7 @@ struct TestNonScalarMemoryDebugger {
 
     size_t local_N = N;
     Kokkos::parallel_for(
-        Kokkos::RangePolicy<ExecSpace>(0, N), KOKKOS_LAMBDA(const size_t i) {
+        Kokkos::RangePolicy<typename ExecSpace::execution_space>(0, N), KOKKOS_LAMBDA (const size_t i) {
           for (size_t r = 0; r < 3; r++) {
             B(i).part_one[r]   = A().part_one[r] * (long)i;
             B(i).part_two[r]   = A().part_two[r] * (long)i;
@@ -184,32 +184,32 @@ struct TestNonScalarMemoryDebugger {
 
 TEST_F(TEST_CATEGORY, memory_debugger_good) {
   {
-    TestMemoryDebugger<TEST_EXECSPACE, Kokkos::CudaSpace, int> f(100);
+    TestMemoryDebugger<TEST_EXECSPACE, TESTING_DEVICE_MEMORY_SPACE, int> f(100);
     f.run_test(false);
-    TestMemoryDebugger<TEST_EXECSPACE, Kokkos::CudaSpace, double> f2(100);
+    TestMemoryDebugger<TEST_EXECSPACE, TESTING_DEVICE_MEMORY_SPACE, double> f2(100);
     f2.run_test(false);
   }
 }
 
 TEST_F(TEST_CATEGORY, memory_debugger_bad) {
   {
-    TestMemoryDebugger<TEST_EXECSPACE, Kokkos::CudaSpace, int> f(100);
+    TestMemoryDebugger<TEST_EXECSPACE, TESTING_DEVICE_MEMORY_SPACE, int> f(100);
     f.run_test(true);
-    TestMemoryDebugger<TEST_EXECSPACE, Kokkos::CudaSpace, double> f2(100);
+    TestMemoryDebugger<TEST_EXECSPACE, TESTING_DEVICE_MEMORY_SPACE, double> f2(100);
     f2.run_test(true);
   }
 }
 
 TEST_F(TEST_CATEGORY, struct_memory_debugger_good) {
   {
-    TestNonScalarMemoryDebugger<TEST_EXECSPACE, Kokkos::CudaSpace> f(100);
+    TestNonScalarMemoryDebugger<TEST_EXECSPACE, TESTING_DEVICE_MEMORY_SPACE> f(100);
     f.run_test(false);
   }
 }
 
 TEST_F(TEST_CATEGORY, struct_memory_debugger_bad) {
   {
-    TestNonScalarMemoryDebugger<TEST_EXECSPACE, Kokkos::CudaSpace> f(100);
+    TestNonScalarMemoryDebugger<TEST_EXECSPACE, TESTING_DEVICE_MEMORY_SPACE> f(100);
     f.run_test(true);
   }
 }
