@@ -60,7 +60,7 @@ FUNCTION(KOKKOS_CFG_DEPENDS SUCCESSOR PRECURSOR)
 ENDFUNCTION()
 
 
-list(APPEND CMAKE_MODULE_PATH cmake/Modules)
+LIST(APPEND CMAKE_MODULE_PATH cmake/Modules)
 
 IF(NOT KOKKOS_HAS_TRILINOS)
   cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
@@ -69,7 +69,7 @@ IF(NOT KOKKOS_HAS_TRILINOS)
   IF (Spack_WORKAROUND) 
     #if we are explicitly using Spack for development,
     #nuke the Spack compiler
-    SEt(SPACK_CXX $ENV{SPACK_CXX})
+    SET(SPACK_CXX $ENV{SPACK_CXX})
     IF(SPACK_CXX)
       SET(CMAKE_CXX_COMPILER ${SPACK_CXX} CACHE STRING "the C++ compiler" FORCE)
       SET(ENV{CXX} ${SPACK_CXX})
@@ -116,6 +116,15 @@ GLOBAL_SET(KOKKOS_XCOMPILER_OPTIONS)
 # will either call raw CMake or TriBITS
 # These are functions like KOKKOS_INCLUDE_DIRECTORIES
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_tribits.cmake)
+
+# Creating KokkosConfig.cmake follows two steps
+# We all text to be appended before processing the .in file
+# This currently helps with allowing text to be appended for TPLs
+# but is generally useful when writing utility functions that need to
+# add information to the final KokkosConfig.cmake
+FILE(READ cmake/KokkosConfig.cmake.in CFG_COMMON_BLOCK)
+# Initialize the file. We will append as we go.
+FILE(WRITE ${Kokkos_BINARY_DIR}/KokkosTempConfig.cmake.in ${CFG_COMMON_BLOCK})
 
 # The build environment setup goes in the following steps
 # 1) Check all the enable options. This includes checking Kokkos_DEVICES
