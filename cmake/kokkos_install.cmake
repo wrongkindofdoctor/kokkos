@@ -7,7 +7,7 @@ SET(KOKKOS_LIBRARIES ${KOKKOS_PROP_LIBS})
 
 INCLUDE(CMakePackageConfigHelpers)
 CONFIGURE_PACKAGE_CONFIG_FILE(
-  ${Kokkos_BINARY_DIR}/KokkosTempConfig.cmake.in
+  cmake/KokkosConfig.cmake.in
   "${Kokkos_BINARY_DIR}/KokkosConfig.cmake"
   INSTALL_DESTINATION ${CMAKE_INSTALL_FULL_LIBDIR}/cmake)
 WRITE_BASIC_PACKAGE_VERSION_FILE("${Kokkos_BINARY_DIR}/KokkosConfigVersion.cmake"

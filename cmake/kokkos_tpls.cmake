@@ -37,19 +37,35 @@ SET(PTHREAD_DEFAULT OFF)
 ENDIF()
 KOKKOS_TPL_OPTION(PTHREAD ${PTHREAD_DEFAULT})
 
+
 IF (KOKKOS_ENABLE_HPX)
   FIND_PACKAGE(HPX REQUIRED)
-#  MESSAGE(STATUS "KOKKOS_ENABLE_HPX: ${HPX_DIR}")
+  #as of right now, HPX doesn't export correctly
+  #so let's convert it to an imported target
+  KOKKOS_CREATE_IMPORTED_TPL(HPX INTERFACE
+    LINK_LIBRARIES ${HPX_LIBRARIES}
+    INCLUDES ${HPX_INCLUDE_DIRS}
+  )
+  #this is a bit funky since this is a CMake target
+  #but HPX doesn't export itself correctly
+  KOKKOS_EXPORT_CMAKE_TPL(HPX)
+  KOKKOS_EXPORT_IMPORTED_TPL(Kokkos::HPX)
+  #I would prefer all of this gets replaced with
+  #KOKKOS_IMPORT_CMAKE_TPL(HPX)
 ENDIF()
 
-KOKKOS_IMPORT_TPL(HWLOC   Kokkos::hwloc)
-KOKKOS_IMPORT_TPL(LIBNUMA Kokkos::libnuma)
-KOKKOS_IMPORT_TPL(LIBRT   Kokkos::librt)
-KOKKOS_IMPORT_TPL(LIBDL   Kokkos::libdl)
-KOKKOS_IMPORT_TPL(MEMKIND Kokkos::memkind)
-KOKKOS_IMPORT_TPL(PTHREAD Kokkos::pthread)
 
-FIND_PACKAGE(TestHeaderOnly)
-FIND_PACKAGE(TestLibraryOnly)
-FIND_PACKAGE(TestCompileOnly)
+#Make sure we use our local FindKokkosCuda.cmake
+KOKKOS_IMPORT_TPL(KokkosCUDA IMPORTED_NAME Kokkos::CUDA  OPTION_NAME CUDA)
+KOKKOS_IMPORT_TPL(HWLOC)
+KOKKOS_IMPORT_TPL(LIBNUMA)
+KOKKOS_IMPORT_TPL(LIBRT)
+KOKKOS_IMPORT_TPL(LIBDL)
+KOKKOS_IMPORT_TPL(MEMKIND)
+KOKKOS_IMPORT_TPL(PTHREAD)
+
+# These can be included for testing purposes only
+# FIND_PACKAGE(TestHeaderOnly)
+# FIND_PACKAGE(TestLibraryOnly)
+# FIND_PACKAGE(TestCompileOnly)
 

@@ -105,6 +105,10 @@ ENDIF()
 # Load either the real TriBITS or a TriBITS wrapper 
 # for certain utility functions that are universal (like GLOBAL_SET)
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/fake_tribits.cmake)
+
+# These are the variables we will append to as we go
+# I really wish these were regular variables
+# but scoping issues can make it difficult
 GLOBAL_SET(KOKKOS_COMPILE_OPTIONS)
 GLOBAL_SET(KOKKOS_LINK_OPTIONS)
 GLOBAL_SET(KOKKOS_CUDA_OPTIONS)
@@ -117,14 +121,9 @@ GLOBAL_SET(KOKKOS_XCOMPILER_OPTIONS)
 # These are functions like KOKKOS_INCLUDE_DIRECTORIES
 INCLUDE(${KOKKOS_SRC_PATH}/cmake/kokkos_tribits.cmake)
 
-# Creating KokkosConfig.cmake follows two steps
-# We all text to be appended before processing the .in file
-# This currently helps with allowing text to be appended for TPLs
-# but is generally useful when writing utility functions that need to
-# add information to the final KokkosConfig.cmake
-FILE(READ cmake/KokkosConfig.cmake.in CFG_COMMON_BLOCK)
-# Initialize the file. We will append as we go.
-FILE(WRITE ${Kokkos_BINARY_DIR}/KokkosTempConfig.cmake.in ${CFG_COMMON_BLOCK})
+# We need to append text here for making sure TPLs
+# we import are available for an installed Kokkos
+SET(KOKKOS_TPL_EXPORTS)
 
 # The build environment setup goes in the following steps
 # 1) Check all the enable options. This includes checking Kokkos_DEVICES
