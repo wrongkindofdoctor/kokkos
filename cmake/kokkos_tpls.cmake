@@ -42,7 +42,7 @@ IF (KOKKOS_ENABLE_HPX)
   FIND_PACKAGE(HPX REQUIRED)
   #as of right now, HPX doesn't export correctly
   #so let's convert it to an imported target
-  KOKKOS_CREATE_IMPORTED_TPL(HPX INTERFACE
+  KOKKOS_CREATE_IMPORTED_TPL(Kokkos::HPX INTERFACE
     LINK_LIBRARIES ${HPX_LIBRARIES}
     INCLUDES ${HPX_INCLUDE_DIRS}
   )
