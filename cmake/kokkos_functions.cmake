@@ -232,7 +232,11 @@ MACRO(kokkos_find_imported NAME)
    ${ARGN})
 
   IF (NOT TPL_IMPORTED_NAME)
-    SET(TPL_IMPORTED_NAME Kokkos::${NAME})
+    IF (TPL_INTERFACE)
+      SET(TPL_IMPORTED_NAME ${NAME})
+    ELSE()
+      SET(TPL_IMPORTED_NAME Kokkos::${NAME})
+    ENDIF()
   ENDIF()
 
   SET(${NAME}_INCLUDE_DIRS)
